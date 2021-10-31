@@ -1,56 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
-    <data>
-        <variable
-            name="viewModel"
-            type="com.prj.mvvmtest.presentation.viewmodel.MainViewModel"/>
-    </data>
-    <LinearLayout
 
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        tools:context=".view.MainActivity">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_margin="10dp">
+            android:layout_margin="12dp"
+            android:orientation="horizontal">
 
             <EditText
-                android:layout_weight="1"
-                android:id="@+id/edit"
-                android:layout_width="match_parent"
+                android:id="@+id/main_activity_search_text_view"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:ems="10"
-                android:inputType="textPersonName"
-                android:hint="할 일"/>
+                android:hint="Query"
+                android:inputType="textPersonName" />
 
             <Button
-                android:text="button"
-                android:id="@+id/button"
+                android:id="@+id/main_activity_search_button"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent">
-
-            </Button>
-
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:backgroundTint="@color/black"
+                android:text="SEARCH"
+                android:textColor="@android:color/white" />
         </LinearLayout>
 
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerview"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginBottom="18dp"
-            android:padding="10dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/btnAdd"
-            app:layout_constraintStart_toEndOf="@+id/btnAdd"
-            app:layout_constraintTop_toBottomOf="@+id/add_button"
-            tools:listitem="@layout/recycler_item" />
+            android:background="#B0B0B0"
+            android:orientation="vertical">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/main_activity_search_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp" />
+        </LinearLayout>
     </LinearLayout>
 </layout>
