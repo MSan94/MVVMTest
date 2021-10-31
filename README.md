@@ -86,5 +86,140 @@ addDisposable(model.requestToServer(senderInfo)
         }))
 ```
 
+#### BaseView
+```
+/**
+ *     BaseKoltinActivity<ActivitySbsMainBinding>
+ *     와 같이 상속 받을 때, ActivitySbsMainBinding과 같은 파일이 자동생성되지 않는다면
+ *     1. <layout></layout>으로 레이아웃이 감싸져있는지 확인
+ *     2. 다시 빌드 ot 클린
+ *     3. 이름 확인
+ */
+
+abstract class BaseView<T : ViewDataBinding, R : BaseKotlinViewModel> : AppCompatActivity() {
+    
+    lateinit var viewDataBinding: T
+
+    /**
+     * setContentView로 호출할 Layout의 리소스 id
+     */
+    abstract val layoutResourceId : Int
+
+    /**
+     * viewModel로 쓰일 변수
+     */
+    abstract val viewModel : R
+
+    /**
+     * 레이아웃을 띄운 직후 호출
+     * 뷰나 액티비티의 속성 등을 초기화
+     * ex) RecyclerView, ToolBar, 드로어뷰
+     */
+    abstract fun initStartView()
+
+    /**
+     * 두번째로 호출
+     * 데이터 바인딩 및 rxJava 설정
+     * ex) rxjava observe, databinding observe..
+     */
+    abstract fun initDataBinding()
+
+    /**
+     * 바인딩 이후에 할 일을 여기에 구현
+     * 그 외에 설정할 것이 있으면 이곳에서 설정
+     * 클릭 리스너도 이곳에서 설정
+     */
+    abstract fun initAfterBinding()
+    
+    private var isSerBackButtonValid = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewDataBinding = DataBindingUtil.setContentView(this,layoutResourceId)
+        
+        initStartView()
+        initDataBinding()
+        initAfterBinding()
+    }
+
+}
+```
+- 모든 액티비티는 이 베이스 액티비티를 구현
+- **lateinit var viewDataBinding** : T : 액티비티의 layout을 빌드하면 자동 생성 클래스
+  ```
+  <?xml version="1.0" encoding="utf-8"?>
+    <layout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            xmlns:app="http://schemas.android.com/apk/res-auto">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context=".view.MainActivity">
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </layout>
+  ```
+  - 일반적인 레이아웃을 만들지만, 그 레이아웃을 <layout></layout>으로 감싼다.
+  - 그리고 빌드를 하면 ViewDataBinding 클래스가 자동 생성
+- **lateinit var layoutResourceId** : Int
+  - onCreate에서 레이아웃 리소스를 설정해야하는데, BaseKotlinActivity에서 onCreate를 오버라이딩 해버리니 BaseKotlinActivity를 구현한 액티비티는 레이아웃 리소스를 설정해줄 곳이 없다.
+  - 그래서 아래와 같은 방법 사용
+  ```
+  ovveride val layoutResourceId : Int
+    get() = R.layout.activity_main
+    
+  -- BaseKotlinActivity에서는
+  viewDataBinding = DataBindingUtil.setContentView(this, layoutResourceId)
+  ```
+- **abstract val viewModel : R**
+  - 액티비티가 BaseKotlinActivity를 구현할 때, ViewDataBinding클래스 뿐만 아니라 뷰모델 클래스도 제네릭으로 준다.
+  - 스낵바 옵저빙을 위해서 사용
+
+#### MainActivity
+```
+import com.prj.mvvmtest.R
+import com.prj.mvvmtest.base.BaseKotlinActivity
+import com.prj.mvvmtest.databinding.ActivityMainBinding
+import com.prj.mvvmtest.viewmodel.MainViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
+
+class MainActivity : BaseKotlinActivity<ActivityMainBinding, MainViewModel>() {
+    override val layoutResourceId: Int
+        get() = R.layout.activity_main
+    override val viewModel : MainViewModel by viewModel()
+
+    override fun initStartView() {
+    }
+
+    override fun initDataBinding() {
+    }
+
+    override fun initAfterBinding() {
+    }
+}
+```
+- 제네릭으로 ViewDataBinding과 ViewModel을 준다.
+- by viewModel()은 koin 의존성 주입
+
+#### MainViewModel
+```
+class MainViewModel(private val model:DataModel): BaseKotlinViewModel() {
+}
+```
+- 뷰모델을 생성할 때 파라미터로 model은 준다
+
+### model
+```
+interface DataModel {
+    fun getData()
+}
+
+class DataModelImpl: DataModel{
+    override fun getData() {
+        return
+    }
+}
+```
 
 ## 참고 사이트
