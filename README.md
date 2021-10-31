@@ -330,6 +330,48 @@ class SimpleTest : KoinTest {
 # Part3 RxJava + Retrofit
 - Retrofit으로 네트워크 통신을하고 그 결과값을 RxJava로 받아오기
 #### RxJava
-- 
+```
+    // rxjava
+    implementation "io.reactivex.rxjava2:rxjava:2.2.0"
+    implementation "io.reactivex.rxjava2:rxandroid:2.0.2"
+```
+```
+interface GitHubService {
+    @GET("/users/{user}/repos")
+    fun listRepos(@Path("user") user:String): Single<Repo>
+}
+```
+- RxJava는 발행과 구독으로 이루어진다.
+- Retrofit에서 Single을 통해 Repo라는 데이터를 **발행**하고 그러한 데이터를 처리하고 싶은곳에서는 그 데이터를 **구독** 한다.
+- 이러한 코드가 subscribeOn, observeOn, subscribe이다.
+- subscribeOn : 데이터를 강에 흘려보내는 스레드(스케줄러)를 지정 하는 작업
+  - 데이터를 발행하는 스케줄러 지정
+- observeOn : 데이터를 줍는 스레드(스케줄러) 지정
+  - 즉, 데이터를 구독하는 스케줄러 지정
+```
+service.listRepos("USER")
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe({
+            name_text_view = it.name
+        }, {
+            Log.d(TAG, "ERROR message : ${it.message}")
+        }))
+```
+- rest API로 호출한 데이터는 딱 한번 사용하기에 single이지만, 소켓통신등의 상황에서는 subject에서 사용하기 좋다
+#### 사용
+- data class Repo(val name:String, val age:Int)
+```
+retrofit:Retrofit = Retrofit.Builder()
+                            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                            .addConverterFactory(GsonConverterFactory.create())
+                            .baseUrl("https://api.github.com")
+                            .build()
+```
+- RxJava와 GsonConvert가 가능해졌다.
+
+# Part4 LiveData & DataBinding
+
 
 ## 참고 사이트
+- https://deque.tistory.com/110?category=984011
