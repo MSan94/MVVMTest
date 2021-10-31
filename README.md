@@ -222,4 +222,109 @@ class DataModelImpl: DataModel{
 }
 ```
 
+
+# Part2 KOIN
+- 의존성 주입 ( Dependency injection )
+- 테스팅을 위해 사용 
+- 간단한 방법으로는 모델을 내부에서 생성하지 않고 생성자의 인자로 준다.
+```
+---- 변경 전 ------
+ViewModel{
+  val model = Model()
+}
+---- 변경 후 ------
+ViewModel(val model){
+}
+```
+- 이렇게 뷰모델을 테스팅 모듈에서 생성할 대 테스팅용 모델을 뷰모델의 생성자로 **주입** 해줌으로서 뷰모델을 테스팅하기 쉽게 할 수 있다.
+- https://medium.com/harrythegreat/kotlin%EC%97%90%EC%84%9C-dagger2-%EC%93%B0%EA%B8%B0-%ED%9E%98%EB%93%9C%EB%8B%88-%EA%B7%B8%EB%9F%BC-%EB%84%8C-koin%EC%9D%B4%EC%95%BC-e9e42ec1288e
+
+#### gradle
+```
+// koin
+implementation "org.koin:koin-androidx-scope:1.0.2"
+implementation "org.koin:koin-androidx-viewmodel:1.0.2"
+```
+
+#### 의존성 주입 모듈
+```
+- 의존성 주입을 하는 실제 코드, 혹은 의존성 주입을 위한 설계도
+var modelPart = module {
+    factory<DataModel> {
+        DataModelImpl()
+    }
+}
+
+var viewModelPart = module {
+    viewModel {
+        MainViewModel(get())
+    }
+}
+
+var myDiModule = listOf(modelPart, viewModelPart)
+```
+- factory{}
+  - 말 그대로 공장이란 의미로, DataModelImpl()이라는 클래스를 생성
+  - 다른 클래스에서 해당 부분이 필요하다면 단순히 **get()/by inject()을** 해주면 팩토리로 만든 클래스가 들어간다.
+- single{}
+  - 싱글톤처럼 어플리케이션에서 단 하나만 만든다.
+  - 주로 retrofit을 통해 만든 서비스 클래스에서 사용
+- viewModel{]
+  - 말 그대로 뷰모델을 만든다.
+  - 액티비티에서 by viewModel()을 통해 얻을 수 있다.
+
+#### Application 클래스
+- startKoin을 통해 의존성 주입
+```
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        startKoin(applicationContext, myDiModule)
+    }
+}
+```
+- **매니페스트 설정 필수!**
+```
+<application
+        android:name=".MyApplication"
+```
+
+## 주입 방법
+- 코드 내에서 주입
+```
+1) val service : BusinessService by inject()
+
+2)
+class Controller(val service : BusinessService){ 
+  
+  fun hello() {
+     // service is ready to use
+     service.sayHello()
+  }
+} 
+
+3) val vm : MyViewModel by viewModel()
+```
+- 테스팅
+```
+// Just tag your class with KoinTest to unlick your testing power
+class SimpleTest : KoinTest { 
+  
+  // lazy inject BusinessService into property
+  val service : BusinessService by inject()
+
+  @Test
+  fun myTest() {
+      // You can start your Koin configuration
+      startKoin(myModules)
+
+      // or directly get any instance
+      val service : BusinessService = get()
+
+      // Don't forget to close it at the end
+      stopKoin()
+  }
+} 
+```
+
 ## 참고 사이트
